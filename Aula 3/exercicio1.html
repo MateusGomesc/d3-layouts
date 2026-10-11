@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt_BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letra A</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body{
+            font-family: system-ui;
+        }
+
+        .container{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .axis-title { font-size: 14px; font-weight: bold; }
+        .trajetoria { opacity: 0.7; transition: opacity 0.2s, stroke-width 0.2s; }
+        .trajetoria:hover { opacity: 1; stroke-width: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Análise de Dados Escolares</h1>
+
+    <div class="container">
+        <h3>Evolução das notas ao longo do tempo (ano)</h3>
+        <div id="notasPorAno"></div>
+    </div>
+
+    <div class="container">
+        <h3>Evolução do peso ao longo da idade (anos)</h3>
+        <div id="idadePorPeso"></div>
+    </div>
+
+    <div class="container">
+        <h3>Trajetória de Crescimento</h3>
+        <div id="trajetoriaFisica"></div>
+    </div>
+
+    <script>
+        let dados = [
+            {"nome": "Ana", "idade": 10, "peso": 34, "alt": 1.40, "nota": 7.8, "ano": 1},
+            {"nome": "Ana", "idade": 11, "peso": 36, "alt": 1.45, "nota": 8.0, "ano": 2},
+            {"nome": "Ana", "idade": 12, "peso": 39, "alt": 1.50, "nota": 8.4, "ano": 3},
+            {"nome": "Ana", "idade": 13, "peso": 42, "alt": 1.55, "nota": 8.1, "ano": 4},
+            {"nome": "Ana", "idade": 14, "peso": 45, "alt": 1.60, "nota": 8.7, "ano": 5},
+
+            {"nome": "Bruno", "idade": 10, "peso": 38, "alt": 1.42, "nota": 6.2, "ano": 1},
+            {"nome": "Bruno", "idade": 11, "peso": 41, "alt": 1.47, "nota": 6.8, "ano": 2},
+            {"nome": "Bruno", "idade": 12, "peso": 44, "alt": 1.53, "nota": 7.1, "ano": 3},
+            {"nome": "Bruno", "idade": 13, "peso": 48, "alt": 1.59, "nota": 6.9, "ano": 4},
+            {"nome": "Bruno", "idade": 14, "peso": 52, "alt": 1.66, "nota": 7.4, "ano": 5},
+
+            {"nome": "Carla", "idade": 10, "peso": 32, "alt": 1.38, "nota": 9.0, "ano": 1},
+            {"nome": "Carla", "idade": 11, "peso": 34, "alt": 1.43, "nota": 9.2, "ano": 2},
+            {"nome": "Carla", "idade": 12, "peso": 37, "alt": 1.49, "nota": 9.1, "ano": 3},
+            {"nome": "Carla", "idade": 13, "peso": 40, "alt": 1.54, "nota": 9.4, "ano": 4},
+            {"nome": "Carla", "idade": 14, "peso": 43, "alt": 1.58, "nota": 9.5, "ano": 5},
+
+            {"nome": "Diego", "idade": 10, "peso": 36, "alt": 1.41, "nota": 5.8, "ano": 1},
+            {"nome": "Diego", "idade": 11, "peso": 39, "alt": 1.46, "nota": 6.0, "ano": 2},
+            {"nome": "Diego", "idade": 12, "peso": 42, "alt": 1.51, "nota": 6.3, "ano": 3},
+            {"nome": "Diego", "idade": 13, "peso": 46, "alt": 1.57, "nota": 6.5, "ano": 4},
+            {"nome": "Diego", "idade": 14, "peso": 50, "alt": 1.63, "nota": 6.7, "ano": 5},
+
+            {"nome": "Eduarda", "idade": 10, "peso": 35, "alt": 1.39, "nota": 7.1, "ano": 1},
+            {"nome": "Eduarda", "idade": 11, "peso": 37, "alt": 1.44, "nota": 7.5, "ano": 2},
+            {"nome": "Eduarda", "idade": 12, "peso": 40, "alt": 1.49, "nota": 7.8, "ano": 3},
+            {"nome": "Eduarda", "idade": 13, "peso": 43, "alt": 1.55, "nota": 8.0, "ano": 4},
+            {"nome": "Eduarda", "idade": 14, "peso": 46, "alt": 1.60, "nota": 8.3, "ano": 5},
+
+            {"nome": "Felipe", "idade": 10, "peso": 40, "alt": 1.43, "nota": 8.2, "ano": 1},
+            {"nome": "Felipe", "idade": 11, "peso": 43, "alt": 1.48, "nota": 8.0, "ano": 2},
+            {"nome": "Felipe", "idade": 12, "peso": 46, "alt": 1.54, "nota": 8.5, "ano": 3},
+            {"nome": "Felipe", "idade": 13, "peso": 50, "alt": 1.61, "nota": 8.6, "ano": 4},
+            {"nome": "Felipe", "idade": 14, "peso": 54, "alt": 1.68, "nota": 8.9, "ano": 5}
+        ]
+
+        var margin = {
+            top: 10, 
+            right: 30, 
+            bottom: 30, 
+            left: 60
+        },
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+        // Idade por ano
+        var svg3 = d3.select("#trajetoriaFisica")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var dadosPorNome = d3.group(dados, d => d.nome);
+
+        var x3 = d3.scaleLinear()
+            .domain([d3.min(dados, d => d.alt) - 0.02, d3.max(dados, d => d.alt) + 0.02])
+            .range([0, width]);
+
+        svg3.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x3).tickFormat(d => d.toFixed(2) + "m"));
+        
+        svg3.append("text")
+            .attr("x", width / 2)
+            .attr("y", height + 40)
+            .attr("text-anchor", "middle")
+            .attr("class", "axis-title")
+            .text("Altura (m)");
+
+        var y3 = d3.scaleLinear()
+            .domain([d3.min(dados, d => d.peso) - 2, d3.max(dados, d => d.peso) + 2])
+            .range([height, 0]);
+
+        svg3.append("g").call(d3.axisLeft(y3));
+        
+        svg3.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height / 2)
+            .attr("y", -40)
+            .attr("text-anchor", "middle")
+            .attr("class", "axis-title")
+            .text("Peso (kg)");
+
+        var color3 = d3.scaleOrdinal()
+            .domain(Array.from(dadosPorNome.keys()))
+            .range(['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33']);
+
+        var lineGen = d3.line()
+            .x(d => x3(d.alt))
+            .y(d => y3(d.peso));
+
+        let trajetorias = svg3.selectAll(".trajetoriaGroup")
+            .data(dadosPorNome)
+            .join("g")
+            .attr("class", "trajetoria");
+
+        trajetorias.append("path")
+            .attr("fill", "none")
+            .attr("stroke", d => color3(d[0]))
+            .attr("stroke-width", 2.5)
+            .attr("d", d => lineGen(d[1]));
+
+        trajetorias.selectAll("circle")
+            .data(d => d[1])
+            .join("circle")
+            .attr("cx", d => x3(d.alt))
+            .attr("cy", d => y3(d.peso))
+            .attr("r", 4)
+            .attr("fill", "white")
+            .attr("stroke", function() { return d3.select(this.parentNode).datum()[0]; })
+            .attr("stroke", function() { 
+                let parentData = d3.select(this.parentNode).datum(); 
+                return color3(parentData[0]); 
+            })
+            .attr("stroke-width", 2);
+
+        trajetorias.append("text")
+            .datum(d => { return {nome: d[0], ultimoPonto: d[1][d[1].length - 1]}; })
+            .attr("x", d => x3(d.ultimoPonto.alt) + 8)
+            .attr("y", d => y3(d.ultimoPonto.peso) + 4)
+            .text(d => d.nome)
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("fill", d => color3(d.nome));
+
+        // Idade por peso
+        const svg2 = d3.select("#idadePorPeso")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const idadesUnicas = Array.from(new Set(dados.map(d => d.idade)));
+        const nomesUnicos = Array.from(new Set(dados.map(d => d.nome)));
+
+        const dadosPorIdade = d3.group(dados, d => d.idade);
+
+        const x2 = d3.scaleBand()
+            .domain(idadesUnicas)
+            .range([0, width])
+            .padding([0.2]);
+
+        svg2.append("g")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(x2).tickFormat(d => d + " anos"));
+
+        const y2 = d3.scaleLinear()
+            .domain([0, d3.max(dados, d => d.peso) + 5])
+            .range([height, 0]);
+
+        svg2.append("g").call(d3.axisLeft(y2));
+
+        const xSubgroup = d3.scaleBand()
+            .domain(nomesUnicos)
+            .range([0, x2.bandwidth()])
+            .padding([0.05]);
+
+        const color2 = d3.scaleOrdinal()
+            .domain(nomesUnicos)
+            .range(['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33']);
+
+        svg2.append("g")
+            .selectAll("g")
+            .data(dadosPorIdade)
+            .join("g")
+            .attr("transform", d => `translate(${x2(d[0])}, 0)`)
+            .selectAll("rect")
+            .data(d => d[1])
+            .join("rect")
+            .attr("x", d => xSubgroup(d.nome))
+            .attr("y", d => y2(d.peso))
+            .attr("width", xSubgroup.bandwidth())
+            .attr("height", d => height - y2(d.peso))
+            .attr("fill", d => color2(d.nome));
+        
+
+        // Notas Por Ano
+        var svg1 = d3.select("#notasPorAno")
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        
+        var sumstat = d3.group(dados, d => d.nome)
+        
+        var x1 = d3.scaleLinear()
+                    .domain(d3.extent(dados, d => d.ano))
+                    .range([0,width])
+        
+        svg1.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x1).ticks(5))
+        
+        var y1 = d3.scaleLinear()
+                    .domain([d3.min(dados, d => +d.nota) - 0.5,d3.max(dados, d => +d.nota) + 0.5])
+                    .range([height, 0])
+        
+        svg1.append("g")
+            .call(d3.axisLeft(y1))
+
+        
+        var color = d3.scaleOrdinal()
+            .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'])
+
+        svg1.selectAll(".line")
+            .data(sumstat)
+            .enter()
+            .append("path")
+            .attr("fill", "none")
+            .attr("stroke", function(d){ return color(d[0]) })
+            .attr("stroke-width", 1.5)
+            .attr("d", function(d){
+            return d3.line()
+                .x(function(d) { return x1(d.ano); })
+                .y(function(d) { return y1(+d.nota); })
+                (d[1])
+            })
+    </script>
+</body>
+</html>

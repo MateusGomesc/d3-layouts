@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Primeiro Exemplo de D3</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <h1>Gráfico de Barras</h1>
+    <div id="chart"></div>
+    <script>
+      let dados = [50, 120, 80, 200, 150];
+      d3.select("#chart")
+        .selectAll("div")
+        .data(dados)
+        .enter()
+        .append("div")
+        .attr("class", "bar")
+        .style("width", function (d) {
+          return d + "px";
+        })
+        .style("height", "30px")
+        .text((d) => d);
+    </script>
+  </body>
+</html>

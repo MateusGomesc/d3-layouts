@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Pipeline de ML & Visualização de Métricas</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .metric-card { border: 1px solid #ddd; padding: 12px; margin: 8px; display: inline-block; width: 220px; }
+        .baixo-desempenho { background-color: #ffe6e6; border-color: #ff4d4d; color: #990000; font-weight: bold; }
+        .linha-par { background-color: #e9e9e9; }
+        .painel-destacado { border: 2px dashed #4A90E2; background-color: #f0f7ff; }
+
+        tr{
+            font-size: 16px;
+            font-family: 'Verdana';
+        }
+
+        th, td{
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="titulo-vis">Relatório de Desempenho do Modelo</h1>
+        <p id="info-dataset">Base de Dados: churn_customers_v2.csv</p>
+    </header>
+
+    <section id="grid-metricas">
+        <div class="metric-card">
+            <h3>Acurácia</h3>
+            <p class="valor">Valor: 0.94</p>
+            <p class="status">Status: Excelente</p>
+        </div>
+        <div class="metric-card">
+            <h3>Recall</h3>
+            <p class="valor">Valor: 0.52</p>
+            <p class="status">Status: CRÍTICO</p>
+        </div>
+        <div class="metric-card">
+            <h3>Precisão</h3>
+            <p class="valor">Valor: 0.88</p>
+            <p class="status">Status: Aceitável</p>
+        </div>
+        <div class="metric-card">
+            <h3>F1-Score</h3>
+            <p class="valor">Valor: 0.49</p>
+            <p class="status">Status: CRÍTICO</p>
+        </div>
+    </section>
+
+    <section id="secao-atributos">
+        <h2>Importância de Atributos (Feature Importance)</h2>
+        <table id="tabela-features">
+            <thead>
+                <tr>
+                    <th>Atributo (Feature)</th>
+                    <th>Score de Importância</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Tempo de Contrato</td><td>0.42</td><td><input type="checkbox" /></td></tr>
+                <tr><td>Gasto Mensal</td><td>0.28</td><td><input type="checkbox" /></td></tr>
+                <tr><td>Suporte Técnico</td><td>0.15</td><td><input type="checkbox" /></td></tr>
+                <tr><td>Idade do Cliente</td><td>0.09</td><td><input type="checkbox" /></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        function destacarGridMetricas(selecao){
+            selecao.call(s => s.classed("painel-destacado", true))
+        }
+
+        destacarGridMetricas(d3.selectAll(".metric-card"))
+
+        d3.selectAll("tr").each(function (d, i) {
+            if((i+1) % 2 == 0){
+                var d = d3.select(this)
+                d.classed("linha-par", true)
+            }
+        })
+    </script>
+</body>
+</html>

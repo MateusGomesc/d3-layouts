@@ -1,0 +1,15 @@
+body {
+  font-family: Arial;
+  margin: 30px;
+}
+.bar {
+  background-color: steelblue;
+  color: white;
+  margin: 5px;
+  padding: 10px;
+  width: 0px;
+  transition: 0.5s;
+}
+.bar:hover {
+  background-color: orange;
+}

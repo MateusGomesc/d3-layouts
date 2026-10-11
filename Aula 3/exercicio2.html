@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt_BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letra B</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+        }
+        
+        #graficoConsumo svg {
+            background-color: #f7f7f7;
+            border: 1px solid #e0e0e0;
+        }
+        .linha-guia {
+            stroke: #000000;
+            stroke-dasharray: 5, 5;
+            stroke-width: 1;
+        }
+        .texto-eixo {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #000000;
+        }
+        .texto-limite {
+            font-size: 12px;
+            fill: #000000;
+        }
+        .texto-aparelho {
+            font-size: 12px;
+            font-weight: bold;
+            fill: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Consumo Mensal de Eletrodomésticos</h3>
+        <div id="graficoConsumo"></div>
+    </div>
+
+    <script>
+        const aparelhos = [
+            { aparelho: "Geladeira", consumo: 42, horas: 720 },
+            { aparelho: "Televisão", consumo: 18, horas: 120 },
+            { aparelho: "Ar-condicionado", consumo: 95, horas: 180 },
+            { aparelho: "Computador", consumo: 32, horas: 160 },
+            { aparelho: "Chuveiro", consumo: 75, horas: 45 },
+            { aparelho: "Micro-ondas", consumo: 12, horas: 30 }
+        ];
+
+        const margin = { top: 40, right: 60, bottom: 40, left: 60 },
+              width = 800 - margin.left - margin.right,
+              height = 500 - margin.top - margin.bottom;
+
+        const svg = d3.select("#graficoConsumo")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleLinear()
+            .domain([0, 110])
+            .range([0, width]);
+
+        const y = d3.scaleLinear()
+            .domain([0, 750])
+            .range([height, 0]);
+
+        svg.append("line")
+            .attr("class", "linha-guia")
+            .attr("x1", x(50)).attr("x2", x(50))
+            .attr("y1", 0).attr("y2", height);
+
+        svg.append("text")
+            .attr("class", "texto-limite")
+            .attr("x", x(50) + 5)
+            .attr("y", 10)
+            .text("Limite: 50 kWh");
+
+        svg.append("line")
+            .attr("class", "linha-guia")
+            .attr("x1", 0).attr("x2", width)
+            .attr("y1", y(100)).attr("y2", y(100));
+
+        svg.append("text")
+            .attr("class", "texto-limite")
+            .attr("x", width - 100)
+            .attr("y", y(100) - 5)
+            .text("Limite: 100 horas");
+
+        svg.append("text")
+            .attr("class", "texto-eixo")
+            .attr("x", -margin.left + 10)
+            .attr("y", -10)
+            .text("Horas de uso");
+
+        svg.append("text")
+            .attr("class", "texto-eixo")
+            .attr("x", width - 100)
+            .attr("y", height + 30)
+            .text("Consumo (kWh)");
+
+        const grupos = svg.selectAll(".aparelhoGroup")
+            .data(aparelhos)
+            .join("g")
+            .attr("class", "aparelhoGroup")
+            .attr("transform", d => `translate(${x(d.consumo)}, ${y(d.horas)})`);
+
+        grupos.append("circle")
+            .attr("r", d => d.consumo * 0.25 + 5)
+            .attr("fill", d => d.consumo > 50 ? "red" : "green")
+            .attr("stroke", "#555")
+            .attr("stroke-width", 1)
+            .style("opacity", 0.9);
+
+        grupos.append("text")
+            .attr("class", "texto-aparelho")
+            .attr("x", d => (d.consumo * 0.25 + 5) + 5)
+            .attr("y", 4)
+            .text(d => d.aparelho);
+
+    </script>
+</body>
+</html>

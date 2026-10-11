@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 - Exercício 1</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .aprovado{
+            color: green;
+        }
+
+        .reprovado{
+            color: red;
+        }
+
+        .maiorNota{
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Controle de Alunos</h1>
+    <div id="containerBtn">
+        <button id="btnDestacarAprovados" >Destacar Aprovados</button>   
+        <button id="btnDestacarReprovados" >Destacar Reprovados</button>   
+        <button id="btnOcultarReprovados" >Ocultar Reprovados</button>   
+        <button id="btnDestacarMaiorNota" >Destacar Maior Nota</button>   
+        <button id="btnRestaurarTabela" >Restaurar Tabela</button>   
+    </div>
+
+    <table id="tabela"></table>
+
+    <script>
+        // dados
+        let alunos = [
+            { nome: "Ana Silva", nota: 75, faltas: 8 },
+            { nome: "Bruno Santos", nota: 55, faltas: 12 },
+            { nome: "Carla Oliveira", nota: 82, faltas: 4 },
+            { nome: "Diego Costa", nota: 45, faltas: 22 },
+            { nome: "Eduarda Lima", nota: 90, faltas: 10 },
+            { nome: "Fernando Rocha", nota: 68, faltas: 20 },
+            { nome: "Gabriela Souza", nota: 30, faltas: 15 },
+            { nome: "Helio Pereira", nota: 60, faltas: 18 },
+            { nome: "Isabela Martins", nota: 95, faltas: 6 },
+            { nome: "João Alves", nota: 58, faltas: 10 }
+        ]
+        
+        let tabela = d3.select("#tabela")
+
+        // funções auxiliares
+        function adicionaLinha(aluno){
+            let linha = tabela.append("tr")
+            linha.append("td").text(aluno.nome)
+            linha.append("td").text(aluno.nota)
+            linha.append("td").text(aluno.faltas)
+            return linha
+        }
+
+        function constroiCabecalho(){
+            let linha = tabela.append("tr")
+            linha.append("th").text("Nome")
+            linha.append("th").text("Nota final")
+            linha.append("th").text("Faltas")
+        }
+
+        function limparTabela(){
+            let trs = tabela.selectAll("tr")
+            let cabecalho = trs[0]
+            trs.remove()
+            tabela.append(cabecalho)
+        }
+
+        function populaTabela(){
+            constroiCabecalho()
+            alunos.forEach(aluno => {
+                adicionaLinha(aluno)
+            });
+        }
+
+        // Populando a tabela
+        populaTabela()
+
+        // Resgatando botões
+        let btnDestacarAprovados = d3.select("#btnDestacarAprovados")
+        let btnDestacarReprovados = d3.select("#btnDestacarReprovados")
+        let btnOcultarReprovados = d3.select("#btnOcultarReprovados")
+        let btnDestacarMaiorNota = d3.select("#btnDestacarMaiorNota")
+        let btnRestaurarTabela = d3.select("#btnRestaurarTabela")
+
+        // Adicionando ações aos botões
+        btnDestacarAprovados.on("click", () => {
+            limparTabela()
+            constroiCabecalho()
+            alunos.forEach(aluno => {
+                let linha = adicionaLinha(aluno)
+                if(aluno.nota >= 60){
+                    linha.classed("aprovado", true)
+                }
+            })
+        })
+
+        btnDestacarReprovados.on("click", () => {
+            limparTabela()
+            constroiCabecalho()
+            alunos.forEach(aluno => {
+                let linha = adicionaLinha(aluno)
+                if(aluno.nota <= 60){
+                    linha.classed("reprovado", true)
+                }
+            })
+        })
+
+        btnOcultarReprovados.on("click", () => {
+            limparTabela()
+            constroiCabecalho()
+            alunos.forEach(aluno => {
+                if(aluno.nota >= 60){
+                    let linha = adicionaLinha(aluno)
+                }
+            })
+        })
+
+        btnDestacarMaiorNota.on("click", () => {
+            maiorNota = 0
+            alunos.forEach(aluno => {
+                if(aluno.nota > maiorNota){
+                    maiorNota = aluno.nota
+                }
+            })
+            limparTabela()
+            constroiCabecalho()
+            alunos.forEach(aluno => {
+                let linha = adicionaLinha(aluno)
+                if(aluno.nota == maiorNota){
+                    linha.classed("maiorNota", true)
+                }
+            })
+        })
+
+        btnRestaurarTabela.on("click", () => {
+            limparTabela()
+            populaTabela()
+        })
+    </script>
+</body>
+</html>
