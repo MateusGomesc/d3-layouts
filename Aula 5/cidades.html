@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt_BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperaturas Por Mês</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        #cidades{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #header{
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 24px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #header h1{
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            color: #252525;
+        }
+
+        #header p{
+            font-weight: 500;
+            color: #acacac;
+            margin: 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Temperatura de Cidades ao Longo do Ano</h1>
+        <p>Temperaturas negativas foram consideras como zero</p>
+    </div>
+    <div id="cidades">
+        <div></div>
+    </div>
+    <script>
+        d3.csv('./data.csv').then(d => {
+            // organizando temperaturas por cidade
+            let objetoInicial = Object.fromEntries(Object.keys(d[0]).filter(key => key != 'mes').map(key => [key, []]))
+            const tempPorCidade = d.reduce((acc, linha) => {
+                Object.keys(linha).forEach(key => {
+                    if(key != 'mes') acc[key].push(linha[key])
+                })
+                return acc
+            }, objetoInicial)
+
+            // configurando a pagina
+            const margin = 100
+            const width = 12 * 110 + 50
+            const height = window.innerHeight - margin
+            const colorScale = d3.scaleOrdinal(d3.schemeDark2).domain(Object.keys(tempPorCidade))
+
+            const svg = d3.select('#cidades')
+                            .select('div')
+                            .append('svg')
+                            .attr('width', width)
+                            .attr('height', height)
+
+            let cidadeCount = 0
+            Object.keys(tempPorCidade).forEach(key => {
+                const temps = tempPorCidade[key]
+                svg.append('text')
+                    .text(key)
+                    .attr('y', cidadeCount * 100 + 50)
+                    .attr('x', 20)
+                    .style('font-family', 'Segoe UI')
+                    .style('font-weight', '700')
+                    .style('text-transform', 'capitalize')
+                    .style('font-size', '18px')
+
+                const bolinhas = svg.append('g')
+                                    .attr('width', width)
+                                    .attr('height', 50)
+
+                const min = d3.min(temps)
+                const max = d3.max(temps)
+
+                bolinhas.selectAll('circle')
+                        .data(temps)
+                        .enter()
+                        .append('circle')
+                        .attr('cx', (d, i) => i * 110 + 50)
+                        .attr('cy', cidadeCount * 110 + 90)
+                        .attr('r', d => {
+                            if(d<0) d=0
+                            return d
+                        })
+                        .attr('fill', colorScale(key))
+
+                cidadeCount++
+            })
+        })
+    </script>
+</body>
+</html>

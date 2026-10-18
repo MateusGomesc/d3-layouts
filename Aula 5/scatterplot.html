@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt_BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScatterPlot com t-SNE</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        #scatterplot{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            background-image: 
+                linear-gradient(rgba(200,200,200,0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200,200,200,0.4) 1px, transparent 1px);
+            background-size: 30px 30px;
+            margin: 0;
+            overflow-y: hidden;
+        }
+
+        #header{
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 4px;
+        }
+        #header div{
+            margin: 32px 0 24px 0;
+        }
+
+        #header h1{
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            color: #494949;
+        }
+
+        #header p{
+            font-weight: 500;
+            color: #acacac;
+            margin: 0;
+            font-style: italic;
+        }
+
+        .tooltip{
+            position: absolute;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-radius: 4px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div>
+            <h1>Redução De Dimensionalidade Com t-SNE</h1>
+            <p>Scatterplot construido a partir da redimensionalização</p>
+        </div>
+    </div>
+    <div id="scatterplot"></div>
+    <script src="tsne.js"></script>
+    <script>
+        d3.csv('./dataset.csv').then(d => {
+            // dimensões originais
+            const dimensoes = d.map(linha => [
+                +linha.feat_1,
+                +linha.feat_2,
+                +linha.feat_3,
+                +linha.feat_4,
+                +linha.feat_5,
+                +linha.feat_6,
+                +linha.feat_7,
+                +linha.feat_8,
+                +linha.feat_9,
+                +linha.feat_10,
+                +linha.feat_11,
+                +linha.feat_12,
+                +linha.feat_13,
+                +linha.feat_14,
+                +linha.feat_15,
+                +linha.feat_16,
+                +linha.feat_17,
+                +linha.feat_18,
+            ])
+
+            // nomes dos clusters
+            const nomes = d.map(linha => linha.class)
+
+            // configurando o tsne
+            var opt = {
+                epsilon: 5,
+                perplexity: 15,
+                dim: 2
+            }
+    
+            const tsne = new tsnejs.tSNE(opt)
+            tsne.initDataRaw(dimensoes)
+
+            // Gerando as melhorias
+            for(var k=0; k<500; k++){
+                tsne.step()
+            }
+
+            var coordenadas = tsne.getSolution()
+
+            // configuracoes do plot
+            const width = window.innerWidth
+            const height = window.innerHeight
+            const margin = 500
+            const dadosPlot = coordenadas.map((coord, i) => {
+                return {
+                    x: coord[0],
+                    y: coord[1],
+                    nome: nomes[i]
+                }
+            })
+            
+            // Ajustando as escalas
+            const xScale = d3.scaleLinear().domain(d3.extent(coordenadas, d => d[0])).range([margin, width - margin])
+            const yScale = d3.scaleLinear().domain(d3.extent(coordenadas, d => d[1])).range([height - margin, margin])
+            const colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain([...new Set(nomes)])
+
+            // criando o tooltip
+            const tooltip = d3.select('body')
+                                .append('div')
+                                .attr('class', 'tooltip')
+
+            // plotando os pontos
+            const svg = d3.select('#scatterplot')
+                            .append('svg')
+                            .attr('width', width)
+                            .attr('height', height)
+
+            const pontos = svg.append('g').attr('class', 'pontos')
+
+            const bolinhas = pontos.selectAll('circle')
+                .data(dadosPlot)
+                .enter()
+                .append('circle')
+                .attr('cx', d => xScale(d.x))
+                .attr('cy', d => yScale(d.y))
+                .attr('r', 5)
+                .attr('fill', d => colorScale(d.nome))
+                .attr('opacity', 0.7)
+                .on('mouseover', (event, d) => {
+                    // destque na bolinha
+                    d3.select(this)
+                        .transition()
+                        .duration(100)
+                        .attr('r', 9)
+                        .attr('opacity', 1)
+
+                    // Ativando tooltip
+                    tooltip.style('opacity', 1).text(d.nome.replaceAll('_', ' '))
+                })
+                .on('mousemove', event => {
+                    // tooltip aparece ao lado do mouse
+                    tooltip.style('left', `${event.pageX+20}px`)
+                            .style('top', `${event.pageY-20}px`)
+                })
+                .on('mouseout', () => {
+                    // retorna bolinha ao tamanho normal
+                    d3.select(this).transition().duration(200).attr('r',5).attr('opacity', 0.7)
+                    // desativa o tooltip
+                    tooltip.style('opacity', 0)
+                })
+            
+            // criando a legenda
+            svg.append('rect')
+                .attr('x', width - 170)
+                .attr('y', 35)
+                .attr('width', 120)
+                .attr('height', [...new Set(nomes)].length * 25 + 10)
+                .attr('fill', 'white')
+                .attr('opacity', 0.8)
+                .attr('rx', 5)
+                .attr('stroke', '#ccc')
+
+            const legenda = svg.selectAll('.legenda')
+                                .data([...new Set(nomes)].sort())
+                                .enter()
+                                .append('g')
+                                .attr('class', 'legenda')
+                                .attr('transform', (d,i) => `translate(${width - 150}, ${30 + i * 25 + 20})`)
+            
+            legenda.append('circle')
+                    .attr('cx', 0)
+                    .attr('cy', 0)
+                    .attr('r', 7)
+                    .attr('fill', d => colorScale(d))
+
+            legenda.append('text')
+                    .attr('x', 15)
+                    .attr('y', 0)
+                    .attr('dy', '.32rem')
+                    .style('font-size', '14px')
+                    .style('fill', '#333')
+                    .text(d => d.replaceAll('_', ' '))
+
+            // configurando o zoom
+            const indicador = svg.append('text')
+                                .attr('x', 30)
+                                .attr('y', 50)
+                                .style('font-family', 'Segoe UI')
+                                .style('fill', '#555')
+                                .style('font-weight', 'bold')
+                                .text('Zoom: 1.0x')
+            const zoom = d3.zoom().scaleExtent([0.5,10]).on('zoom', event => {
+                // Ajusta os pontos
+                pontos.attr('transform', event.transform)
+                // atualiza o zoom
+                indicador.text(`Zoom: ${event.transform.k.toFixed(1)}x`)
+            })
+            svg.call(zoom)
+
+        })
+
+    </script>
+</body>
+</html>
